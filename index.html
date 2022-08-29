@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+        }
+
+        [c] {
+            display: grid;
+        }
+
+        [c]>* {
+            grid-row: 1;
+            grid-column: 1;
+            background: transparent;
+        }
+
+        [n] {
+            display: none;
+        }
+
+        [ui] {
+            background-size: 20px 20px;
+            background-image:
+                linear-gradient(to right, #ffffff50 1px, transparent 1px),
+                linear-gradient(to bottom, #ffffff50 1px, transparent 1px);
+        }
+    </style>
+</head>
+
+<body>
+    <div c>
+        <canvas g n></canvas>
+        <canvas ui n></canvas>
+    </div>
+    <script src=w.js></script>
+    <script src=example.js></script>
+</body>
+
+</html>
