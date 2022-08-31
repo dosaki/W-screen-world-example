@@ -107,17 +107,12 @@ function intersect_xz(near, far) {
 // W.v          = projection-view matrix (It seems?)
 // W.vo         = original view matrix without any transformation
 // W.projection = projection matrix
-const worldToScreen = (x, z) => {
-    const redPoint = W.vo.transformPoint(new DOMPoint(x, 1, z));
-    const greenPoint = W.vo.transformPoint(new DOMPoint(x, z, 1));
-    const bluePoint = W.v.transformPoint(new DOMPoint(x, 1, z));
+const worldToScreen = (rect, x, z) => {
+    const redPoint = W.v.transformPoint(new DOMPoint(x, 1, z));
     return {
-        rX: redPoint.x,
-        rY: redPoint.z,
-        gX: greenPoint.x,
-        gY: greenPoint.y,
-        bX: bluePoint.x,
-        bY: bluePoint.z
+        rX: (redPoint.x + 1) / 2  * rect.width,
+        // In WebGL, +y is up, but on the screen, +y is down. Flip the y coordinate.
+        rY: (-redPoint.y + 1) / 2 * rect.height,
     };
 };
 
@@ -137,7 +132,7 @@ uiCanvas.addEventListener("mousemove", (e) => {
     worldZ = Math.min(size - 1, Math.max(0, Math.round(z)));
 
     W.move({ n: "world-cursor", x: worldX, y: -0.4, z: worldZ });
-    c = worldToScreen(Math.round(x), Math.round(z));
+    c = worldToScreen(rect, Math.round(x), Math.round(z));
 });
 
 setTimeout(() => {
@@ -154,12 +149,14 @@ let lastUpdate = 0;
 const main = function (t) {
     uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
-    uiCtx.fillStyle = "#00aaff";
-    uiCtx.fillRect(c.bX, c.bY, 10, 10);
-    uiCtx.fillStyle = "#ff0000";
-    uiCtx.fillRect(c.rX, c.rY, 8, 8);
-    uiCtx.fillStyle = "#00ff00";
-    uiCtx.fillRect(c.gX, c.gY, 6, 6);
+    // uiCtx.fillStyle = "#ff000099";
+    // uiCtx.fillRect(c.rX - 4, c.rY - 4, 8, 8);
+
+    uiCtx.textAlign = "center";
+    uiCtx.textBaseline = "middle";
+    uiCtx.fillStyle = "#ffffff";
+    uiCtx.font = "20px monospace";
+    uiCtx.fillText(`(${worldX}, ${worldZ})`, c.rX, c.rY - 20);
 
     window.requestAnimationFrame(main);
 };
