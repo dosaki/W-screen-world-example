@@ -51,8 +51,8 @@ W.add("cube", {
 // Define Ortho Projection
 const ortho = (near, far) => {
     return new DOMMatrix([
-        2 / (orthoValue * 2), 0, 0, 0,
-        0, 2 / (orthoValue * 2), 0, 0,
+        1 / orthoValue, 0, 0, 0,
+        0, 1 / orthoValue, 0, 0,
         0, 0, -2 / (far - near), 0,
         0, 0, -(far + near) / (far - near), 1
     ]);
@@ -68,12 +68,41 @@ let c = {
     bY: 0 //  blue square
 };
 
-const screenToWorld = (x, y) => {
-    const point = new DOMPoint(orthoValue * 2 * x - orthoValue, 1, orthoValue * 4 * y - orthoValue * 3);
+const screenToWorld = (x, y, z) => {
+    // On the screen, +y is down, but in WebGL, +y is up. Flip the y coordinate.
+    const point = new DOMPoint(x * 2 - 1, -(y * 2 - 1), z);
     return W.v.inverse()
-        .multiply(W.projection)
         .transformPoint(point);
 };
+
+function add(a, b) {
+    return new DOMPoint(a.x + b.x, a.y + b.y, a.z + b.z);
+}
+
+function subtract(a, b) {
+    return new DOMPoint(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+function scale(a, scalar) {
+    return new DOMPoint(a.x * scalar, a.y * scalar, a.z * scalar);
+}
+
+function dot(a, b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+function normalize(a) {
+    let length = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+    return new DOMPoint(a.x / length, a.y / length, a.z / length);
+}
+
+const plane_center = new DOMPoint(0, 0, 0);
+const plane_normal = new DOMPoint(0, 1, 0);
+function intersect_xz(near, far) {
+    let ray_direction = subtract(far, near);
+    let t = dot(subtract(plane_center, near), plane_normal) / dot(ray_direction, plane_normal);
+    return add(near, scale(ray_direction, t));
+}
 
 // W.v          = projection-view matrix (It seems?)
 // W.vo         = original view matrix without any transformation
@@ -101,7 +130,9 @@ uiCanvas.addEventListener("mousemove", (e) => {
     mouseX = e.clientX - rect.left;
     mouseY = e.clientY - rect.top;
     if (!W.v) return;
-    const { x, z } = screenToWorld(mouseX / rect.width, mouseY / rect.height);
+    let near = screenToWorld(mouseX / rect.width, mouseY / rect.height, -1);
+    let far = screenToWorld(mouseX / rect.width, mouseY / rect.height, 1);
+    let {x, z} = intersect_xz(near, far);
     worldX = Math.min(size - 1, Math.max(0, Math.round(x)));
     worldZ = Math.min(size - 1, Math.max(0, Math.round(z)));
 
